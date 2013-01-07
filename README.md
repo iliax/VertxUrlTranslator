@@ -1,4 +1,4 @@
-VertUrlTranslator
+VertxUrlTranslator
 =================
 
 Самый маленький и самый лучший проект)
