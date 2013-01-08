@@ -1,6 +1,3 @@
-import java.net.URL;
-import java.net.URLConnection;
-
 props = ["url" : "http://www.rambler.ru/"]  //default url
 port = 8080		//port for translation
 putUrl = "/put"
@@ -19,38 +16,34 @@ def processPut(req){
 }
 
 def saveUrl(url){
-	props["url"] = url
-	props["lastdate"] = new Date()
+	props = ["url" : url, "lastdate" : new Date()]
 	new File("props.ser").withObjectOutputStream { out -> out << props }
 }
 
 def loadProps(){
 	try {
 		new File("props.ser").withObjectInputStream { instream ->
-			instream.eachObject { props = it }
-		}
+			instream.eachObject { props = it } }
 	} catch(Exception e){ /* using default url */ }
 	return props
 }
 
 def sendData(def req, def url){
-	URLConnection conn = new URL(url).openConnection()
-	conn.setConnectTimeout(10000)
-	conn.setReadTimeout(20000)
+	try {
+		URLConnection conn = new URL(url).openConnection()
+		conn.setConnectTimeout(10000)
+		conn.setReadTimeout(20000)
 	
-	BufferedInputStream inn = new BufferedInputStream(conn.getInputStream())
-	def data = new byte[1024]
-	int count
-	def buff = new org.vertx.groovy.core.buffer.Buffer()
-	while ((count = inn.read(data, 0, 1024)) != -1) {
-		def bytes = new byte[count]
-		System.arraycopy(data, 0, bytes, 0, count)	//refactor it then
-		buff.appendBytes((byte[]) bytes)
-	}
-	
-	req.response.putHeader("Content-Type", conn.getContentType())
-	req.response.putHeader("Content-Length", buff.getLength())
-	req.response.end(buff)
+		def bytes = new ByteArrayOutputStream()
+		bytes << conn.getInputStream() 
+		bytes.close()
+		req.response.putHeader("Content-Type", conn.getContentType())
+		req.response.putHeader("Content-Length", bytes.size())
+		req.response.end new org.vertx.groovy.core.buffer.Buffer(bytes.toByteArray())
+		
+	} catch ( IOException e ) { 
+		container.logger.error("ololo", e)
+		req.response.end() }
 }
 
 vertx.createHttpServer().requestHandler{ req ->
@@ -61,8 +54,7 @@ vertx.createHttpServer().requestHandler{ req ->
 	
 	String url = props["url"]
 	if(!req.path.equals("/") && url.endsWith("/") ){
-		url = url.substring(0, url.length()-1)
-		url = url + req.path
+		url = url.substring(0, url.length()-1) + req.path
 	}
 	
 	sendData(req, url)
