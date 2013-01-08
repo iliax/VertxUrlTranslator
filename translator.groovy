@@ -1,5 +1,9 @@
 props = ["url" : "http://www.rambler.ru/"]  //default url
 port = 8080		//port for translation
+putUrl = "/put"
+
+/////////////////////////////////////
+
 loadProps()
 
 def processPut(req){
@@ -22,7 +26,7 @@ def loadProps(){
 		new File("props.ser").withObjectInputStream { instream ->
 			instream.eachObject { props = it }
 		}
-	}catch(Exception e){ /* using default url */ }
+	} catch(Exception e){ /* using default url */ }
 	return props
 }
 
@@ -35,7 +39,7 @@ def loadData(def url){
 }
 
 vertx.createHttpServer().requestHandler{ req ->
-	if(req.path.equals("/put")){
+	if(req.path.equals(putUrl)){
 		processPut(req)
 		return
 	}
