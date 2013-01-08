@@ -1,4 +1,5 @@
 props = ["url" : "http://www.rambler.ru/"]  //default url
+port = 8080		//port for translation
 loadProps()
 
 def processPut(req){
@@ -47,4 +48,4 @@ vertx.createHttpServer().requestHandler{ req ->
 	
 	loadData(url)
 	req.response.sendFile "temp"
-}.listen(8080)
+}.listen(port)
