@@ -8,9 +8,13 @@ VertxUrlTranslator
 Для запуска использовать фреймворк Vert.X:
   - скачать и установить jre 1.7+ 
   - скачать vert.x 1.3.0+
+  - поправить 3 первые строки translator.groovy
+    - выставить дефолтный урл
+    - порт для трансляции
+    - урл для управления
   - запусить файл translator.groovy : vertx run translator.groovy
     
-Управление:
+Выставления урла для трансляции:
   /put?url=http://www.urlfortranslation.com/
 
 Просморт текущего транслируемого урла:
