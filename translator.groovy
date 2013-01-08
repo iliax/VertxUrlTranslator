@@ -1,3 +1,6 @@
+import java.net.URL;
+import java.net.URLConnection;
+
 props = ["url" : "http://www.rambler.ru/"]  //default url
 port = 8080		//port for translation
 putUrl = "/put"
@@ -30,12 +33,24 @@ def loadProps(){
 	return props
 }
 
-def loadData(def url){
-	def file = new FileOutputStream("temp")
-	def out = new BufferedOutputStream(file)
-	out << new URL(url).openStream()
-	out.close()
-	return file
+def sendData(def req, def url){
+	URLConnection conn = new URL(url).openConnection()
+	conn.setConnectTimeout(10000)
+	conn.setReadTimeout(20000)
+	
+	BufferedInputStream inn = new BufferedInputStream(conn.getInputStream())
+	def data = new byte[1024]
+	int count
+	def buff = new org.vertx.groovy.core.buffer.Buffer()
+	while ((count = inn.read(data, 0, 1024)) != -1) {
+		def bytes = new byte[count]
+		System.arraycopy(data, 0, bytes, 0, count)	//refactor it then
+		buff.appendBytes((byte[]) bytes)
+	}
+	
+	req.response.putHeader("Content-Type", conn.getContentType())
+	req.response.putHeader("Content-Length", buff.getLength())
+	req.response.end(buff)
 }
 
 vertx.createHttpServer().requestHandler{ req ->
@@ -50,6 +65,5 @@ vertx.createHttpServer().requestHandler{ req ->
 		url = url + req.path
 	}
 	
-	loadData(url)
-	req.response.sendFile "temp"
+	sendData(req, url)
 }.listen(port)
