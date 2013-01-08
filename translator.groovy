@@ -1,4 +1,4 @@
-props = [:]
+props = ["url" : "http://www.rambler.ru/"]  //default url
 loadProps()
 
 def processPut(req){
@@ -21,9 +21,7 @@ def loadProps(){
 		new File("props.ser").withObjectInputStream { instream ->
 			instream.eachObject { props = it }
 		}
-	}catch(Exception e){
-		props =  ["url" : "http://www.rambler.ru/"]
-	}
+	}catch(Exception e){ /* using default url */ }
 	return props
 }
 
@@ -35,21 +33,18 @@ def loadData(def url){
 	return file
 }
 
-def server = vertx.createHttpServer()
-server.requestHandler{ req ->
-
+vertx.createHttpServer().requestHandler{ req ->
 	if(req.path.equals("/put")){
 		processPut(req)
 		return
 	}
-
+	
 	String url = props["url"]
 	if(!req.path.equals("/") && url.endsWith("/") ){
 		url = url.substring(0, url.length()-1)
 		url = url + req.path
 	}
-
+	
 	loadData(url)
-
 	req.response.sendFile "temp"
-}.listen(8080, "localhost")
+}.listen(8080)
